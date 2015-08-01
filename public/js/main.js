@@ -47,14 +47,6 @@ var initCamPosition = {
     z: 5000
 }
 
-// var uDimsMm = {
-//     space: 0,
-//     width: 222,
-//     height: 44,
-//     length: 484
-// }
-
-
 var uDimsMm = {
     space: 0,
     width: 241,
@@ -67,14 +59,6 @@ var cols = 43;
 
 var uWidthPlusSpacer = uDimsMm.width + uDimsMm.space;
 var rackWidthHalf = cols * uWidthPlusSpacer/2;
-
-// var deviceImages = [
-//     {u: 1, list: ['textures/_1U_front_server_pure_fa_scaled.jpg',
-//                   'textures/_1U_front_server_pure_m_scaled.jpg']},
-//     {u: 2, list: ['textures/_2U_front_server_hp_storageworks_scaled.jpg',
-//                   'textures/_2U_front_shelf_pure_fa_scaled.jpg']},
-//     {u: 4, list: ['textures/_4U_front_shelf_hp_storageworks_scaled.jpg']}
-// ]
 
 var deviceImages = [
     {u: 1, list: ['textures/_1U_front_server_pure_m.png']},
@@ -110,14 +94,10 @@ var seenHeights = [];
             var deviceDimsMm = uDimsMm;
 
             // if (uNum >= 2) {
-
             //     deviceDimsMm.height *= uNum;
-
             // }
 
-            // CubeGeometry parameters:width (x), height (y), depth (z), segments along x, segments along y, segments along z
             var boxGeometry = new THREE.BoxGeometry( deviceDimsMm.width, deviceDimsMm.height, deviceDimsMm.length);
-
             var boxMesh = new THREE.Mesh( boxGeometry, boxMaterials );
     
             textureDict[deviceImageStr] = boxMesh;
@@ -198,7 +178,6 @@ document.addEventListener('DOMContentLoaded', function(){
             if (videoSources[0].facing == 'environment') camSelection = 0;
             if (videoSources[1].facing == 'environment') camSelection = 1;
         }
-        camSelection = 1;
         console.log('cam selection: ' + camSelection);
 
         reallyGetUserMedia(camSelection);
@@ -348,45 +327,6 @@ function reallyGetUserMedia(camSelect) {
         userMediaSet = true;
 
     }, function(error) { console.log('error: ' + error); });
-}
-
-// function initGetUserMedia() {
-
-//     MediaStreamTrack.getSources(function (sourceInfos) {
-
-//         for (var i = 0; i != sourceInfos.length; ++i) {
-//             var sourceInfo = sourceInfos[i];
-//             if (sourceInfo.kind === 'video') {
-//                 console.log(sourceInfo.id, sourceInfo.facing, sourceInfo.label || 'camera');
-//                 videoSources.push(sourceInfo.id);
-//             } else {
-//                 console.log('Some other kind of source: ' + sourceInfo.kind);
-//             }
-//         }
-//         console.log("sources", videoSources);
-
-//     });
-
-//     if (typeof videoSources[1] === 'undefined') {
-//         camSelection = 0;
-//     }
-//     else {
-//         if (videoSources[0].facing == 'environment') camSelection = 0;
-//         if (videoSources[1].facing == 'environment') camSelection = 1;
-//     }
-//     camSelection = 1;
-//     console.log('cam selection: ' + camSelection);
-
-//     reallyGetUserMedia(camSelection);
-
-// }
-
-function coordPrint(name, coord) {
-
-    console.log(name + ': [' + coord.x + ', '
-                             + coord.y + ', '
-                             + coord.z + ']');
-
 }
 
 function dataURItoBlob(dataURI) {
