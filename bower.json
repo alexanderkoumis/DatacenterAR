@@ -1,0 +1,25 @@
+{
+  "name": "image-stream",
+  "version": "0.0.0",
+  "authors": [
+    "alexander <me@alexander.computer>"
+  ],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "binaryjs": "~0.2.1",
+    "three.js": "~0.71.0",
+    "pako": "~0.2.7"
+  },
+  "devDependencies": {
+    "bootstrap": "~3.3.5",
+    "jquery": "~2.1.4",
+    "pako": "~0.2.7"
+  }
+}
