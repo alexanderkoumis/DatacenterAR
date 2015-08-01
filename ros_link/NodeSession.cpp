@@ -1,17 +1,9 @@
 #include "NodeSession.hpp"
 
-#include <csignal>
-#include <iostream>
-#include <sstream>
-#include <string>
-
-#include <node.h>
 #include <node_buffer.h>
-#include <opencv2/highgui/highgui.hpp>
 #include <uv.h>
 
-using namespace node;
-using namespace v8;
+#include <opencv2/highgui/highgui.hpp>
 
 struct NodeFeedPictureArgs { 
   NodeSesh* obj_;
@@ -48,7 +40,7 @@ void NodeBindSendPose(uv_async_s* handle) {
 
 NodeSession::~NodeSession() {}
 
-void NodeSession::Init(Handle<Object> exports) {
+void NodeSession::Init(v8::Handle<v8::Object> exports) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
 
   // Prepare constructor template
@@ -61,7 +53,7 @@ void NodeSession::Init(Handle<Object> exports) {
   NODE_SET_PROTOTYPE_METHOD(tpl, "feedPictureBlob", BindFeedPictureBlob);
 
   constructor.Reset(isolate, tpl->GetFunction());
-  exports->Set(String::NewFromUtf8(isolate, "NodeSession"), tpl->GetFunction());
+  exports->Set(v8::String::NewFromUtf8(isolate, "NodeSession"), tpl->GetFunction());
 }
 
 void NodeSession::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
@@ -75,7 +67,7 @@ void NodeSession::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     node_session->Ref();
     node_session->node_sesh_ = new NodeSesh();
 
-    // threading
+    // Threading
     node_session->node_sesh_->loop_ = uv_loop_new();
 
     uv_async_init(node_session->node_sesh_->loop_,
@@ -97,14 +89,14 @@ void NodeSession::New(const v8::FunctionCallbackInfo<v8::Value>& args) {
     const int argc = 1;
     v8::Local<v8::Value> callback = args[0];
     v8::Local<v8::Value> argv[argc] = {callback};
-    Local<Function> cons = Local<Function>::New(isolate, constructor);
+    v8::Local<v8::Function> cons = v8::Local<v8::Function>::New(isolate, constructor);
     args.GetReturnValue().Set(cons->NewInstance(argc, argv));
   }
 }
 
 void NodeSession::NewInstance(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  HandleScope scope(isolate);
+  v8::HandleScope scope(isolate);
 
   const int argc = 1;
   v8::Local<v8::Value> callback = args[0];
@@ -115,7 +107,7 @@ void NodeSession::NewInstance(const v8::FunctionCallbackInfo<v8::Value>& args) {
 
 void NodeSession::BindFeedPictureBlob(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  HandleScope scope(isolate);
+  v8::HandleScope scope(isolate);
 
   std::vector<unsigned char> v_picture;
 
@@ -153,7 +145,7 @@ void NodeSession::BindFeedPictureBlob(const v8::FunctionCallbackInfo<v8::Value>&
 
 void NodeSession::BindFeedPictureFile(const v8::FunctionCallbackInfo<v8::Value>& args) {
   v8::Isolate* isolate = v8::Isolate::GetCurrent();
-  HandleScope scope(isolate);
+  v8::HandleScope scope(isolate);
 
   std::vector<unsigned char> v_picture;
 

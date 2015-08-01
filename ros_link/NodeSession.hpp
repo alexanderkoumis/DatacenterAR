@@ -1,9 +1,7 @@
 #ifndef NODE_SESSION_HPP
 #define NODE_SESSION_HPP
 
-#include <node.h>
 #include <node_object_wrap.h>
-
 #include <opencv2/core/core.hpp>
 
 #include "NodeSesh.hpp"

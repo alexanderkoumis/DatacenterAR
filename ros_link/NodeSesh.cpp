@@ -4,7 +4,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-
 static cv::Mat ImageRsz16(const cv::Mat& image_in) {
   cv::Mat image_out;
   const int rows = image_in.rows;
@@ -61,17 +60,16 @@ NodeSesh::~NodeSesh() {
 }
 
 void NodeSesh::FeedPicture(const cv::Mat& image_orig, int channels) {
-
+ 
   if (image_orig.empty()) {
     std::cout << "Error: image empty" << std::endl;
     return;
   }
 
-  cv::Mat image;
-
   const bool divisible_by_16_rows = image_orig.rows % 16;
   const bool divisible_by_16_cols = image_orig.rows % 16;
 
+  cv::Mat image;
   image = (!divisible_by_16_cols || !divisible_by_16_rows) ? ImageRsz16(image_orig) : image_orig;
 
   std::string img_mode;
