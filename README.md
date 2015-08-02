@@ -4,9 +4,10 @@ Augmented reality datacenter simulation
 
 ## Required to build
 
-  * node 0.12+
-  * bower
-  * ROS Indigo | Jade
+  * [node 0.12+](https://nodejs.org/)
+  * [bower](http://bower.io/)
+  * [grunt](http://gruntjs.com/getting-started) (optional)
+  * [ROS Indigo](http://wiki.ros.org/indigo) | [ROS Jade](http://wiki.ros.org/jade)
     * [LSD_SLAM](https://github.com/tum-vision/lsd_slam)
 
 ## Building
@@ -14,6 +15,11 @@ Augmented reality datacenter simulation
 ```bash
 cd $project_dir
 npm install
+
+# with Grunt
+grunt install
+
+# without Grunt
 bower install
 cd ros_link
 node-gyp rebuild
@@ -21,29 +27,34 @@ node-gyp rebuild
 
 ## Running
 
-Three processes must be launched to run DatacenterAR:
+Three processes must be launched to run DatacenterAR. With Grunt (a javascript task-runner) installed, launching said processes is as simple as:
 
-In one terminal, initiate ROS:
+```bash
+grunt
+```
+
+Killing this process (either with SIGINT or SIG) will also clean up all spawned child processes.
+
+To launch the necessary processes without Grunt (and manually clean up spawned processes), first initialize ROS: 
 
 ```bash
 roscore
 ```
 
-In another, launch the web app:
+In another terminal, launch the web app:
 
 ```bash
 cd $project_dir
-iojs app.js
+node js/app.js
 ```
 
-When a client connects, images from their webcam, along with camera information are published by `image_transport::ImageTransport`. Broadcast topics `/nodejs_link/image` and `/nodejs_link/camera_info` are then used as input for LSD_SLAM:
+When a client connects, images from their webcam, along with camera information are published by `image_transport::ImageTransport` as `/nodejs_link/image` and `/nodejs_link/camera_info`, which are subsequently used as input for LSD_SLAM:
 
 ```bash
 rosrun lsd_slam_core live_slam image:=/nodejs_link/image camera_info:=/nodejs_link/camera_info'
 ```
 
 Pose estimations are published by LSD_SLAM as `/lsd_slam/pose`, which are sent back to the client's three.js viewer to modify perspective.
-
 
 ## Notes
 

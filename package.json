@@ -1,13 +1,21 @@
 {
-  "name": "image-stream",
+  "name": "DatacenterAR",
   "version": "1.0.0",
   "description": "",
   "main": "app.js",
   "dependencies": {
+    "binaryjs": "^0.2.1",
     "express": "^4.13.1",
+    "lz4": "^0.4.2",
+    "pako": "^0.2.7",
+    "pngjs": "^0.4.0",
     "stream-buffers": "^2.2.0"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "grunt": "^0.4.5",
+    "grunt-concurrent": "^2.0.1",
+    "grunt-shell": "^1.1.2"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },

@@ -5,12 +5,11 @@ var server             = require('http').Server(app);
 var binaryjs           = require('binaryjs');
 var streamBuff         = require('stream-buffers');
 
-var roslink            = require('./ros_link/build/Release/ROSLink');
+var roslink            = require('../ros_link/build/Release/ROSLink');
+var streamPicInterface = require('./stream-pic-interface');
+var avgFPS             = require('./avg-fps');
 
-var streamPicInterface = require('./js/stream-pic-interface');
-var avgFPS             = require('./js/avg-fps');
-
-app.use(express.static(__dirname + '/public'));
+app.use(express.static(__dirname + '/../public'));
 
 var ports = {
     http: 3000,
