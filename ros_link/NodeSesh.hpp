@@ -9,6 +9,7 @@
 
 #include <ros/ros.h>
 #include <ros/callback_queue.h>
+#include <camera_info_manager/camera_info_manager.h>
 #include <cv_bridge/cv_bridge.h>
 #include <geometry_msgs/PoseStamped.h>
 #include <image_transport/image_transport.h>
@@ -24,14 +25,14 @@ struct NodeSendPoseArgs {
 
 class Session {
  public:
-	virtual void FeedPicture(const cv::Mat& image, int channels) {};
+	virtual void FeedPicture(const cv::Mat& image, int focal_x, int focal_y, int channels) {};
 };
 
 class NodeSesh : public Session {
  public:
   NodeSesh();
   ~NodeSesh();
-  virtual void FeedPicture(const cv::Mat& image, int channels);
+  virtual void FeedPicture(const cv::Mat& image, int focal_x, int focal_y, int channels);
   friend class NodeSession;
   void PoseCallback(const geometry_msgs::PoseStamped& msg);
   void SendPose(cv::Mat& quat, cv::Mat& transform);
@@ -46,13 +47,15 @@ class NodeSesh : public Session {
   uv_async_t asyncBindFeedPicture_;
   uv_async_t asyncSendPose_;
 
+  std::once_flag once_info_;
+
   ros::CallbackQueue cb_i_;
   ros::CallbackQueue cb_o_;
 
   ros::Subscriber sub_;
+
   image_transport::CameraPublisher pub_;
   sensor_msgs::CameraInfoPtr cam_info_;
-  std::once_flag once_info_;
 
 };
 

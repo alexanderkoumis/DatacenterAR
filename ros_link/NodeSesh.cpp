@@ -4,14 +4,29 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-static cv::Mat ImageRsz16(const cv::Mat& image_in) {
-  cv::Mat image_out;
-  const int rows = image_in.rows;
-  const int cols = image_in.cols;
-  const int rows_new = rows - (rows % 16) + 16;
-  const int cols_new = cols - (cols % 16) + 16;
-  cv::resize(image_in, image_out, cv::Size(cols_new, rows_new));
-  return image_out;
+#define FUCK() std::cout << __LINE__ << ":" << __func__ << std::endl;
+
+void GetPublishedTopics(std::vector<std::string>& topics) {
+  ros::master::V_TopicInfo master_topics;
+  ros::master::getTopics(master_topics);
+
+  for (auto& topic : master_topics) {
+    topics.push_back(topic.name);
+    std::cout << "Topic name: " << topic.name << std::endl;
+  }
+
+}
+
+bool TopicExists(const std::string& topic_new) {
+  std::vector<std::string> topics;
+  GetPublishedTopics(topics);
+
+  for (auto& topic_existing : topics) {
+    if (topic_existing == topic_new) {
+      return true;
+    }
+  }
+  return false;
 }
 
 void NodeSesh::PoseCallback(const geometry_msgs::PoseStamped& msg) {
@@ -32,7 +47,7 @@ void NodeSesh::PoseCallback(const geometry_msgs::PoseStamped& msg) {
   uv_async_send(&asyncSendPose_);
 }
 
-NodeSesh::NodeSesh() : cam_info_(new sensor_msgs::CameraInfo()) {
+NodeSesh::NodeSesh() : cam_info_(new sensor_msgs::CameraInfo) {
   int argc = 0;
   char** argv = 0;
   ros::init(argc, argv, "image_publisher");
@@ -44,6 +59,8 @@ NodeSesh::NodeSesh() : cam_info_(new sensor_msgs::CameraInfo()) {
   nh_o.setCallbackQueue(&cb_o_);
 
   image_transport::ImageTransport it(nh_i);
+
+  std::cout << "Topic exists: " << TopicExists("/nodejs_link/image") << std::endl;
 
   pub_ = it.advertiseCamera("/nodejs_link/image", 10);
   sub_ = nh_o.subscribe("/lsd_slam/pose", 100, &NodeSesh::PoseCallback, this);
@@ -59,21 +76,41 @@ NodeSesh::~NodeSesh() {
   ros::waitForShutdown();
 }
 
-void NodeSesh::FeedPicture(const cv::Mat& image_orig, int channels) {
+void NodeSesh::FeedPicture(const cv::Mat& image_orig, int focal_x, int focal_y, int channels) {
  
   if (image_orig.empty()) {
     std::cout << "Error: image empty" << std::endl;
     return;
   }
 
-  const bool divisible_by_16_rows = image_orig.rows % 16;
-  const bool divisible_by_16_cols = image_orig.rows % 16;
+  if (image_orig.rows <= 0 || image_orig.cols <= 0) {
+    std::cout << "Error: image size: " << image_orig.size() << std::endl;
+    return;
+  }
 
-  cv::Mat image;
-  image = (!divisible_by_16_cols || !divisible_by_16_rows) ? ImageRsz16(image_orig) : image_orig;
+  const int cols_orig = image_orig.cols;
+  const int rows_orig = image_orig.rows;
+
+  const bool divisible_by_16_rows = cols_orig % 16;
+  const bool divisible_by_16_cols = rows_orig % 16;
+  const bool needs_to_be_resized = !divisible_by_16_rows || !divisible_by_16_cols;
+
+
+  cv::Mat image = image_orig.clone();
+
+  if (needs_to_be_resized) {
+
+    const int cols_new = cols_orig - (cols_orig % 16) + 16;
+    const int rows_new = rows_orig - (rows_orig % 16) + 16;
+
+    focal_x *= (cols_new / cols_orig); 
+    focal_y *= (rows_new / rows_orig); 
+
+    cv::resize(image, image, cv::Size(cols_new, rows_new));
+
+  }
 
   std::string img_mode;
-
   switch (channels) {
     case 1: img_mode = "mono8"; break;
     case 3: img_mode = "rgb8"; break;
@@ -81,12 +118,13 @@ void NodeSesh::FeedPicture(const cv::Mat& image_orig, int channels) {
     default: img_mode = "rgb8"; break;
   }
 
-  cv_bridge::CvImage header(std_msgs::Header(), img_mode, image);
-  sensor_msgs::ImagePtr msg = header.toImageMsg();
+  cv_bridge::CvImage img_ros(std_msgs::Header(), img_mode, image);
+  sensor_msgs::ImagePtr img_msg = img_ros.toImageMsg();
 
   std::call_once(once_info_, [&] () {
-    const double fx = 525.0;
-    const double fy = 525.0;
+
+    const double fx = focal_x;
+    const double fy = focal_y;
     const double cx = image.cols/2;
     const double cy = image.rows/2;
 
@@ -94,14 +132,19 @@ void NodeSesh::FeedPicture(const cv::Mat& image_orig, int channels) {
                     0.0f, fy,   cy,
                     0.0f, 0.0f, 1.0f};
 
-    cam_info_->P = {1.0, 0.0, 0.0, 0.0,
-                    0.0, 1.0, 0.0, 0.0,
-                    0.0, 0.0, 1.0, 0.0};
+    cam_info_->R = {1.0f, 0.0f, 0.0f,
+                    0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f};
+
+    cam_info_->P = {fx,   0.0f, cx,   0.0,
+                    0.0f, fy,   cy,   0.0,
+                    0.0f, 0.0f, 1.0f, 0.0};
 
     cam_info_->width = image.cols;
     cam_info_->height = image.rows;
+
   });
 
-  pub_.publish(msg, cam_info_);
+  pub_.publish(img_msg, cam_info_);
   cb_o_.callAvailable(ros::WallDuration());
 }

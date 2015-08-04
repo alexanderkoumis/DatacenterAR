@@ -13,7 +13,6 @@ function errorLog(message) {
 
 }
 
-
 module.exports = {
 
     rawTo8UC4: function(session, stream, meta, callback) {
@@ -25,15 +24,17 @@ module.exports = {
         });
 
         stream.on('end', function() {
-    
+
             if (buffer.length < 10) {
                 console.log('Error: not enough data (' + buffer.length + ' bytes)');
                 return;
             }
 
-            session.feedPictureBlob(buffer, meta.width, meta.height, meta.channels, function(pose) {
+            session.feedPictureBlob(buffer, meta.id, meta.width, meta.height, meta.focalLen.x, meta.focalLen.y, meta.channels, function(pose) {
                 callback(pose);
             });
+
+
         });
 
     },
@@ -55,9 +56,10 @@ module.exports = {
                 return;
             }
 
-            session.feedPictureBlob(new Uint8Array(uncompressed), meta.width, meta.height, meta.channels, function(pose) {
+            session.feedPictureBlob(new Uint8Array(uncompressed), meta.id, meta.width, meta.height, meta.focalLen.x, meta.focalLen.y, meta.channels, function(pose) {
                 callback(pose);
             });
+
         });
 
     },
@@ -74,7 +76,7 @@ module.exports = {
 
             var result = inflator.result;
 
-            session.feedPictureBlob(result, meta.width, meta.height, meta.channels, function(pose) {
+            session.feedPictureBlob(result, meta.id, meta.width, meta.height, meta.focalLen.x, meta.focalLen.y, meta.channels, function(pose) {
                 callback(pose);
             });
         });
@@ -110,7 +112,7 @@ module.exports = {
             png.data = new Buffer(result);
             
             png.pack().pipe(writeBuffer).once('close', function () {
-                session.feedPictureFile(writeBuffer.getContents(), meta.channels, function(pose) {
+                session.feedPictureFile(writeBuffer.getContents(), meta.id, meta.focalLen.x, meta.focalLen.y, meta.channels, function(pose) {
                     callback(pose);
                 });
             });
@@ -119,9 +121,7 @@ module.exports = {
 
     blobToFile: function(session, stream, meta, callback) {
         
-        console.log('length: ' + meta.length);
-
-        var buffer = new Buffer(meta.length);
+        var buffer = new Buffer(0);
 
         stream.on('data', function(chunk) {
             buffer = Buffer.concat([buffer, chunk]);
@@ -140,6 +140,5 @@ module.exports = {
         });
     }
     
-
 }
 

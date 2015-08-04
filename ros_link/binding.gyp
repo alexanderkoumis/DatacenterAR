@@ -26,7 +26,7 @@
 				[ 'OS=="linux"', {
 					'libraries': [ '/usr/lib/x86_64-linux-gnu/libjpeg.so'],			
 					'cflags_cc!': [ '-fno-rtti', '-fno-exceptions' ],
-    				'cflags_cc+': [ '-frtti' ]
+    				'cflags_cc+': [ '-frtti', '-gdwarf-3', '-ggdb' ]
 				}],
 				[ 'OS=="mac"', {
 					'cflags_cc!': [ '-fno-rtti', '-fno-exceptions' ],

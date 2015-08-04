@@ -4,10 +4,14 @@
 #include <uv.h>
 
 #include <opencv2/highgui/highgui.hpp>
+#define FUCK() std::cout << __LINE__ << ":" << __func__ << std::endl;
 
 struct NodeFeedPictureArgs { 
   NodeSesh* obj_;
   void* picture_;
+  void* id_;
+  int focal_x_;
+  int focal_y_;
   int channels_;
 };
 
@@ -16,7 +20,7 @@ PersistentFunc NodeSession::constructor;
 void NodeBindFeedPicture(uv_async_s* handle) {
   NodeFeedPictureArgs* args = (NodeFeedPictureArgs*)(handle->data);
   cv::Mat picture(*((cv::Mat*)args->picture_));
-  args->obj_->FeedPicture(picture, args->channels_);
+  args->obj_->FeedPicture(picture, args->focal_x_, args->focal_y_, args->channels_);
   delete args;
 }
 
@@ -26,16 +30,13 @@ void NodeBindSendPose(uv_async_s* handle) {
 
   NodeSendPoseArgs* args = (NodeSendPoseArgs*)(handle->data);
   v8::Handle<v8::String> pose_str = v8::String::NewFromUtf8(isolate, args->pose_cstr_);
-  PersistentFunc callback_pers(isolate, args->callback_);
-  v8::Local<v8::Function> callback = v8::Local<v8::Function>::New(isolate, callback_pers);
+  v8::Handle<v8::Function> callback = v8::Local<v8::Function>::New(isolate, args->callback_);
   
   if (strlen(args->pose_cstr_) > 1) {
     const int argc = 1;
     v8::Handle<v8::Value> argv [argc] = {pose_str};
-    callback.As<v8::Function>()->Call(callback, argc, argv);    
+    callback->Call(isolate->GetCurrentContext()->Global(), argc, argv);    
   }
-
-  delete args;
 }
 
 NodeSession::~NodeSession() {}
@@ -112,9 +113,12 @@ void NodeSession::BindFeedPictureBlob(const v8::FunctionCallbackInfo<v8::Value>&
   std::vector<unsigned char> v_picture;
 
   char* ptr_pic = node::Buffer::Data(args[0]);
-  int cols = args[1]->NumberValue();
-  int rows = args[2]->NumberValue();
-  int channels = args[3]->NumberValue();
+  v8::String::Utf8Value id_v8(args[1]->ToString());
+  int cols = args[2]->NumberValue();
+  int rows = args[3]->NumberValue();
+  int focal_x = args[4]->NumberValue();
+  int focal_y = args[5]->NumberValue();
+  int channels = args[6]->NumberValue();
 
   int img_mode = 0;
 
@@ -125,16 +129,20 @@ void NodeSession::BindFeedPictureBlob(const v8::FunctionCallbackInfo<v8::Value>&
   }
 
   cv::Mat picture = cv::Mat(cv::Size2i(cols, rows), img_mode, ptr_pic);
+  std::string id = std::string(*id_v8);
 
   NodeSession* node_session = ObjectWrap::Unwrap<NodeSession>(args.This());
 
   NodeFeedPictureArgs* call_args = new NodeFeedPictureArgs {
       node_session->node_sesh_,
       (void*) new cv::Mat(picture),
+      (void*) new std::string(id),
+      focal_x,
+      focal_y,
       channels
   };
   
-  v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[4]);
+  v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[7]);
   node_session->node_sesh_->asyncBindFeedPicture_.data = (void*) call_args;
   node_session->node_sesh_->callback_ = PersistentFunc(isolate, callback);
 
@@ -152,7 +160,10 @@ void NodeSession::BindFeedPictureFile(const v8::FunctionCallbackInfo<v8::Value>&
   char* ptr_pic = node::Buffer::Data(args[0]);
   const size_t len_pic = node::Buffer::Length(args[0]);
 
-  int channels = args[1]->NumberValue();
+  v8::String::Utf8Value id_v8(args[1]->ToString());
+  int focal_x = args[2]->NumberValue();
+  int focal_y = args[3]->NumberValue();
+  int channels = args[4]->NumberValue();
 
   const unsigned char* data_pic = (const unsigned char *) ptr_pic;
 
@@ -160,15 +171,20 @@ void NodeSession::BindFeedPictureFile(const v8::FunctionCallbackInfo<v8::Value>&
 
   cv::Mat picture(cv::imdecode(v_picture, -1));
 
+  const char* id = *id_v8;
+
   NodeSession* node_session = ObjectWrap::Unwrap<NodeSession>(args.This());
 
   NodeFeedPictureArgs* call_args = new NodeFeedPictureArgs {
       node_session->node_sesh_,
       (void*) new cv::Mat(picture),
+      (void*) id,
+      focal_x,
+      focal_y,
       channels
   };
   
-  v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[2]);
+  v8::Handle<v8::Function> callback = v8::Handle<v8::Function>::Cast(args[5]);
   node_session->node_sesh_->asyncBindFeedPicture_.data = (void*) call_args;
   node_session->node_sesh_->callback_ = PersistentFunc(isolate, callback);
 

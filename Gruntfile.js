@@ -4,7 +4,8 @@ var procsToKill = ['roscore',
                    'rosmaster',
                    'lsd_slam_core',
                    'viewer',
-                   'node'];
+                   'node',
+                   'iojs'];
 
 
 function cleanup() {
@@ -21,6 +22,9 @@ function handleSignal(signal) {
 
 process.on('SIGINT', function() { handleSignal('SIGINT') });
 process.on('SIGTSTP', function() { handleSignal('SIGTSTP') });
+process.on('SIGQUIT', function() { handleSignal('SIGQUIT') });
+process.on('SIGSEGV', function() { handleSignal('SIGSEGV') });
+process.on('SIGTERM', function() { handleSignal('SIGTERM') });
 
 module.exports = function(grunt) {
 
@@ -35,7 +39,9 @@ module.exports = function(grunt) {
         },
         shell: {  
             options: { stderr: true },
-            install: { command: 'bower install; cd ros_link; node-gyp rebuild; cd ..' },
+            bower: { command: 'bower install' },
+            gyp: { command: 'cd ros_link; node-gyp rebuild; cd ..' },
+            gyp_debug: { command: 'cd ros_link; node-gyp rebuild --debug; cd ..' },
             roscore: { command: 'roscore' },
             lsd_slam: { command: 'rosrun lsd_slam_core live_slam image:=/nodejs_link/image camera_info:=/nodejs_link/camera_info' },
             lsd_slam_viewer: { command: 'rosrun lsd_slam_viewer viewer' },
@@ -46,7 +52,8 @@ module.exports = function(grunt) {
     grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-shell');
 
-    grunt.registerTask('install', 'Performing installation procedures', 'shell:install');
+    grunt.registerTask('build', 'Building project components', ['shell:bower', 'shell:gyp'] );
+    grunt.registerTask('build_debug', 'Building project components (debug)', ['shell:bower', 'shell:gyp_debug'] );
     grunt.registerTask('cleanup', 'Kill existing processes', cleanup);
     grunt.registerTask('default', 'Starting DatacenterAR', ['cleanup', 'concurrent:launch']);
 

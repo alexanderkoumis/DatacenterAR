@@ -1,4 +1,5 @@
 var textureDict = {};
+var focalLenScaled = {};
 
 var deviceImages = [
     {u: 1, list: ['textures/_1U_front_server_pure_m.png']},
@@ -10,38 +11,44 @@ var deviceImages = [
 
 var initCamPosition = {
     x: 0,
-    y: 1000,
-    z: 5000
-}
+    y: 750,
+    z: 250
+};
 
 var initLightPosition = {
     x: 0,
     y: 2000,
     z: 3000
-}
+};
+
+var focalLenOrig = {
+    x: 525.0,
+    y: 525.0
+};
 
 var canvasDims = {
-    width: 192,
-    height: 128,
+    width: 320,
+    height: 256,
 };
 
 var rackDims = {
     rows: 26,
     cols: 43
-}
+};
 
 var uDimsMm = {
-    space: 0,
+    space: 5,
     width: 241,
     height: 44,
     length: 465
-}
+};
+
+var poseScale = 1000;
 
 var uWidthPlusSpacer = uDimsMm.width + uDimsMm.space;
 var rackWidthHalf = rackDims.cols * uWidthPlusSpacer/2;
 
 var clientSet = false;
-
 var client = new BinaryClient('ws://' + window.location.hostname + ':9000');
 
 var video = document.getElementById('video');
@@ -99,6 +106,10 @@ gridHelper.material.transparent = true;
 scene.add( light );
 scene.add( new THREE.PointLightHelper( light, 10 ) );
 scene.add( gridHelper );
+
+var greenBoxMaterial = new THREE.MeshBasicMaterial( { color: 0x00ffff, wireframe: true } );
+var greenBoxGeometry = new THREE.BoxGeometry( 500, 500, 500 );
+var greenBoxMesh = new THREE.Mesh( greenBoxGeometry, greenBoxMaterial );
 
 // Preload devices meshes
 deviceImages.forEach(function(deviceImageObj) {
@@ -165,7 +176,8 @@ for ( var col = 0; col < rackDims.cols; ++col ) {
         var boxMesh = textureDict[deviceImagePath].clone();
 
         boxMesh.position.x = col * uWidthPlusSpacer - rackWidthHalf;
-        boxMesh.position.y = row * uDimsMm.height;
+        boxMesh.position.y = row * uDimsMm.height + uDimsMm.space;
+        boxMesh.position.z = -3000;
 
         scene.add ( boxMesh );
 
@@ -178,17 +190,19 @@ for ( var col = 0; col < rackDims.cols; ++col ) {
 // Event listeners
 imageWorker.onmessage = function(image) {
 
-    if (clientSet) {
+    if (clientSet && userMediaSet) {
+
         client.send(image.data, {
+            id: getVideoId(),
             width: canvasDims.width,
             height: canvasDims.height,
             channels: 1,
-            step: 30,
+            focalLen: focalLenScaled,
             length: image.data.length,
             interface: 'rawTo8UC4'
         });
-    }
 
+    }
 }
 
 window.addEventListener('resize', function () {
@@ -229,6 +243,29 @@ window.addEventListener('keyup', function(event) {
 
 }, false);
 
+video.addEventListener('playing', function getVideoSize() {
+
+    var videoDims = {
+        width: video.videoWidth,
+        height: video.videoHeight
+    };
+
+    var videoScale = {
+        width: canvasDims.width / videoDims.width,
+        height: canvasDims.height / videoDims.height
+    };
+    
+    focalLenScaled = {
+        x: focalLenOrig.x * videoScale.width,
+        y: focalLenOrig.y * videoScale.height
+    };
+
+    video.removeEventListener('playing', getVideoSize, false);
+
+    userMediaSet = true;
+
+}, false);
+
 function dataURItoBlob(dataURI) {
 
     var byteString = atob(dataURI.split(',')[1]);
@@ -243,10 +280,12 @@ function dataURItoBlob(dataURI) {
 
 function adjustPose(object, poseArr) {
 
-    object.position.x = parseFloat(poseArr[0]);
-    object.position.y = parseFloat(poseArr[1]);
-    object.position.z = parseFloat(poseArr[2]);
-    var quaternion = new THREE.Quaternion(poseArr[3], poseArr[5], -poseArr[4], poseArr[6]);
+    var poseX = parseFloat(poseArr[0]) * poseScale + initCamPosition.x;
+    var poseY = parseFloat(poseArr[1]) * poseScale + initCamPosition.y;
+    var poseZ = parseFloat(poseArr[2]) * poseScale + initCamPosition.z;
+
+    object.position.set( poseX, poseY, poseZ );
+    var quaternion = new THREE.Quaternion(poseArr[3], -poseArr[4], poseArr[5], poseArr[6]);
     object.rotation.setFromQuaternion(quaternion.normalize(), 'XYZ');
 
 }
@@ -277,7 +316,7 @@ function switchCamera() {
 
     renderer.autoClear = false;
     renderer.clear();
-    renderer.render( backgroundScene , backgroundCamera );
+    renderer.render( backgroundScene, backgroundCamera );
     renderer.clearDepth();
     renderer.render( scene, cameraPerspective );
 

@@ -57,11 +57,10 @@ binaryServer.on('connection', function(client) {
                 var seconds = (endTime - startTime) / 1000;
                 var hz = picsMax / seconds;
                 console.log(seconds + ' seconds for ' + picsMax + ' frames (' + hz + ') hz');
-                process.exit();
             }
 
-            avgFPS.tick();
-            avgFPS.print();
+            // avgFPS.tick();
+            // avgFPS.print();
 
         });
 

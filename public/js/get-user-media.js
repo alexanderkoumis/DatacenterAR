@@ -25,7 +25,6 @@ else {
     if (videoSources[1].facing == 'environment') camSelection = 1;
 }
 
-
 function reallyGetUserMedia(camSelect, videoElem) {
 
     navigator.getUserMedia = (navigator.getUserMedia ||
@@ -33,8 +32,10 @@ function reallyGetUserMedia(camSelect, videoElem) {
                               navigator.mozGetUserMedia ||
                               navigator.msGetUserMedia);
 
+    var videoId = videoSources[camSelect];
+
     var constraints = {
-        video: { optional: [{ sourceId: videoSources[camSelect] }] },
+        video: { optional: [{ sourceId: videoId }] },
         audio: false
     };
 
@@ -42,8 +43,13 @@ function reallyGetUserMedia(camSelect, videoElem) {
 
         videoElem.src = window.URL.createObjectURL(stream);
         videoElem.play();
-        userMediaSet = true;
 
     }, function(error) { console.log('error: ' + error); });
 
+}
+
+function getVideoId() {
+
+    return videoSources[camSelection];
+    
 }
