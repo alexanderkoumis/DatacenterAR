@@ -9,10 +9,11 @@ var deviceImages = [
     {u: 4, list: ['textures/_4U_front_shelf_hp_storageworks.png']}
 ];
 
+
 var initCamPosition = {
     x: 0,
     y: 750,
-    z: 250
+    z: -150
 };
 
 var initLightPosition = {
@@ -177,7 +178,7 @@ for ( var col = 0; col < rackDims.cols; ++col ) {
 
         boxMesh.position.x = col * uWidthPlusSpacer - rackWidthHalf;
         boxMesh.position.y = row * uDimsMm.height + uDimsMm.space;
-        boxMesh.position.z = -3000;
+        boxMesh.position.z = -2000;
 
         scene.add ( boxMesh );
 

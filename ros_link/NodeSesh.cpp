@@ -4,8 +4,6 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
 
-#define FUCK() std::cout << __LINE__ << ":" << __func__ << std::endl;
-
 void GetPublishedTopics(std::vector<std::string>& topics) {
   ros::master::V_TopicInfo master_topics;
   ros::master::getTopics(master_topics);
@@ -14,7 +12,6 @@ void GetPublishedTopics(std::vector<std::string>& topics) {
     topics.push_back(topic.name);
     std::cout << "Topic name: " << topic.name << std::endl;
   }
-
 }
 
 bool TopicExists(const std::string& topic_new) {
@@ -118,7 +115,9 @@ void NodeSesh::FeedPicture(const cv::Mat& image_orig, int focal_x, int focal_y, 
     default: img_mode = "rgb8"; break;
   }
 
-  cv_bridge::CvImage img_ros(std_msgs::Header(), img_mode, image);
+  auto header = std_msgs::Header();
+  header.stamp = ros::Time::now();
+  cv_bridge::CvImage img_ros(header, img_mode, image);
   sensor_msgs::ImagePtr img_msg = img_ros.toImageMsg();
 
   std::call_once(once_info_, [&] () {

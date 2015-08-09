@@ -1,6 +1,10 @@
 # DatacenterAR
 
-Augmented reality datacenter simulation
+Augmented reality datacenter web app built with Node, Three.js, and ROS. Half-written during Pure Storage's "Flash Hack" Hackathon.
+
+Progress video:
+
+[![DatacenterAR](http://img.youtube.com/vi/tWvgdcDv4MU/0.jpg)](http://www.youtube.com/watch?v=tWvgdcDv4MU)
 
 ## Required to build
 

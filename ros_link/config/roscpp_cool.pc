@@ -1,0 +1,7 @@
+prefix_ros=/opt/ros/$ROS_DISTRO
+
+Name: roscpp
+Description: Description of roscpp
+Version: 1.11.13
+Cflags: -I{prefix_ros}/include -I/usr/include
+Libs: -L${prefix_ros}/lib -lroscpp -lpthread -L/usr/lib/x86_64-linux-gnu -lboost_signals -lboost_filesystem -lboost_system

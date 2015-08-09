@@ -40,8 +40,8 @@ module.exports = function(grunt) {
         shell: {  
             options: { stderr: true },
             bower: { command: 'bower install' },
-            gyp: { command: 'cd ros_link; node-gyp rebuild; cd ..' },
-            gyp_debug: { command: 'cd ros_link; node-gyp rebuild --debug; cd ..' },
+            gyp: { command: 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$PWD/ros_link/config; cd ros_link; node-gyp rebuild; cd ..' },
+            gyp_debug: { command: 'export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$PWD/ros_link/config; cd ros_link; node-gyp rebuild --debug; cd ..' },
             roscore: { command: 'roscore' },
             lsd_slam: { command: 'rosrun lsd_slam_core live_slam image:=/nodejs_link/image camera_info:=/nodejs_link/camera_info' },
             lsd_slam_viewer: { command: 'rosrun lsd_slam_viewer viewer' },
@@ -51,7 +51,6 @@ module.exports = function(grunt) {
 
     grunt.loadNpmTasks('grunt-concurrent');
     grunt.loadNpmTasks('grunt-shell');
-
     grunt.registerTask('build', 'Building project components', ['shell:bower', 'shell:gyp'] );
     grunt.registerTask('build_debug', 'Building project components (debug)', ['shell:bower', 'shell:gyp_debug'] );
     grunt.registerTask('cleanup', 'Kill existing processes', cleanup);

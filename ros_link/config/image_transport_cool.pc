@@ -1,0 +1,7 @@
+prefix_ros=/opt/ros/$ROS_DISTRO
+
+Name: image_transport
+Description: Description of image_transport
+Version: 1.11.5
+Cflags: -I${prefix_ros}/include
+Libs: -L${prefix_ros}/lib -limage_transport
